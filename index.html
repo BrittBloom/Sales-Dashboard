@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales KPI Dashboard</title>
+    <link rel="stylesheet" href="styles.css?v=20251021oo&t=1234567890">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <h1>Sales KPI Dashboard</h1>
+            <div class="header-controls">
+                <div class="filter-section">
+                <div class="filter-controls">
+                    <select id="aeFilter" class="ae-filter">
+                        <option value="all">All Account Executives</option>
+                    </select>
+                </div>
+            <div class="date-controls">
+                <div class="date-input-group">
+                    <label for="monthSelector">Select Month:</label>
+                    <select id="monthSelector" class="month-selector">
+                        <option value="2024-06">Jun-2024</option>
+                        <option value="2024-07">Jul-2024</option>
+                        <option value="2024-08">Aug-2024</option>
+                        <option value="2024-09">Sep-2024</option>
+                        <option value="2024-10">Oct-2024</option>
+                        <option value="2024-11">Nov-2024</option>
+                        <option value="2024-12">Dec-2024</option>
+                        <option value="2025-01">Jan-2025</option>
+                        <option value="2025-02">Feb-2025</option>
+                        <option value="2025-03">Mar-2025</option>
+                        <option value="2025-04">Apr-2025</option>
+                        <option value="2025-05">May-2025</option>
+                        <option value="2025-06">Jun-2025</option>
+                        <option value="2025-07">Jul-2025</option>
+                        <option value="2025-08">Aug-2025</option>
+                        <option value="2025-09">Sep-2025</option>
+                        <option value="2025-10">Oct-2025</option>
+                        <option value="2025-11">Nov-2025</option>
+                        <option value="2025-12">Dec-2025</option>
+                    </select>
+                </div>
+            </div>
+                </div>
+                <div class="action-controls">
+                    <button id="refreshBtn" class="btn btn-primary">Refresh Data</button>
+                    <button id="exportBtn" class="btn btn-secondary">Export Report</button>
+                    <div class="last-updated">
+                        Last updated: <span id="lastUpdated">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Cards Grid -->
+        <div class="kpi-container">
+            <!-- Date-Filtered Metrics Section -->
+            <div class="kpi-section">
+                <h2 class="section-title">Monthly Sales Metrics</h2>
+                <!-- All 5 KPIs in one row -->
+                <div class="kpi-grid">
+                    <!-- KPI 1: Closed-Won Per Month -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <h3>Closed-Won<br>Per Month</h3>
+                            <div class="kpi-target" id="closedWonTarget">Target: 10</div>
+                        </div>
+                        <div class="kpi-value" id="closedWonValue">-</div>
+                        <div class="kpi-comparison" id="closedWonComparison">
+                            <span class="comparison-arrow" id="closedWonArrow">-</span>
+                            <span class="comparison-text" id="closedWonComparisonText">-</span>
+                        </div>
+                        <div class="kpi-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="closedWonProgress"></div>
+                            </div>
+                            <div class="progress-text" id="closedWonText">0%</div>
+                        </div>
+                        <div class="kpi-status" id="closedWonStatus">-</div>
+                        <div class="kpi-description">Deals closed within selected date range</div>
+                    </div>
+
+                    <!-- KPI 2: Meeting Closed Rate -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <h3>Meeting<br>Closed Rate</h3>
+                            <div class="kpi-target">Target: 35%</div>
+                        </div>
+                        <div class="kpi-value" id="meetingClosedRate">-</div>
+                        <div class="kpi-comparison" id="meetingClosedComparison">
+                            <span class="comparison-arrow" id="meetingClosedArrow">-</span>
+                            <span class="comparison-text" id="meetingClosedComparisonText">-</span>
+                        </div>
+                        <div class="kpi-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="meetingClosedProgress"></div>
+                            </div>
+                            <div class="progress-text" id="meetingClosedText">0%</div>
+                        </div>
+                        <div class="kpi-status" id="meetingClosedStatus">-</div>
+                        <div class="kpi-description">Deals closed within 14 days of exiting meeting booked</div>
+                    </div>
+
+                    <!-- KPI 3: Missed Meeting Rate -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <h3>Missed<br>Meeting Rate</h3>
+                            <div class="kpi-target">Target: < 10%</div>
+                        </div>
+                        <div class="kpi-value" id="missedMeetingRate">-</div>
+                        <div class="kpi-comparison" id="missedMeetingComparison">
+                            <span class="comparison-arrow" id="missedMeetingArrow">-</span>
+                            <span class="comparison-text" id="missedMeetingComparisonText">-</span>
+                        </div>
+                        <div class="kpi-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="missedMeetingProgress"></div>
+                            </div>
+                            <div class="progress-text" id="missedMeetingText">0%</div>
+                        </div>
+                        <div class="kpi-status" id="missedMeetingStatus">-</div>
+                        <div class="kpi-description">Deals that entered meeting booked then missed meeting</div>
+                    </div>
+
+                    <!-- KPI 4: Outbound Meetings Booked -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <h3>Outbound<br>Meetings</h3>
+                            <div class="kpi-target">Target: 5</div>
+                        </div>
+                        <div class="kpi-value" id="outboundMeetings">-</div>
+                        <div class="kpi-comparison" id="outboundMeetingsComparison">
+                            <span class="comparison-arrow" id="outboundMeetingsArrow">-</span>
+                            <span class="comparison-text" id="outboundMeetingsComparisonText">-</span>
+                        </div>
+                        <div class="kpi-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="outboundMeetingsProgress"></div>
+                            </div>
+                            <div class="progress-text" id="outboundMeetingsText">0%</div>
+                        </div>
+                        <div class="kpi-status" id="outboundMeetingsStatus">-</div>
+                        <div class="kpi-description">Placeholder - column to be added</div>
+                    </div>
+
+                    <!-- KPI 5: Outbound Deals Closed -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <h3>Outbound<br>Deals Closed</h3>
+                            <div class="kpi-target">Target: 3</div>
+                        </div>
+                        <div class="kpi-value" id="outboundDealsClosed">-</div>
+                        <div class="kpi-comparison" id="outboundDealsClosedComparison">
+                            <span class="comparison-arrow" id="outboundDealsClosedArrow">-</span>
+                            <span class="comparison-text" id="outboundDealsClosedComparisonText">-</span>
+                        </div>
+                        <div class="kpi-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="outboundDealsClosedProgress"></div>
+                            </div>
+                            <div class="progress-text" id="outboundDealsClosedText">0%</div>
+                        </div>
+                        <div class="kpi-status" id="outboundDealsClosedStatus">-</div>
+                        <div class="kpi-description">Placeholder - column to be added</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Separator Line -->
+            <div class="kpi-separator"></div>
+
+            <!-- Non-Date-Filtered Metrics Section -->
+            <div class="kpi-section">
+                <h2 class="section-title">Overall Pipeline Health Metrics</h2>
+                <!-- Pipeline Health Row: 3 KPIs -->
+                <div class="kpi-grid">
+                    <!-- KPI 6: Deals in Limbo for >14 days -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <h3>% Deals in Limbo<br>for >14 days</h3>
+                            <div class="kpi-target">Target: < 20%</div>
+                        </div>
+                        <div class="kpi-value" id="limboOver14Days">-</div>
+                        <div class="kpi-comparison" id="limboOver14DaysComparison">
+                            <span class="comparison-arrow" id="limboOver14DaysArrow">-</span>
+                            <span class="comparison-text" id="limboOver14DaysComparisonText">-</span>
+                        </div>
+                        <div class="kpi-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="limboOver14DaysProgress"></div>
+                            </div>
+                            <div class="progress-text" id="limboOver14DaysText">0%</div>
+                        </div>
+                        <div class="kpi-status" id="limboOver14DaysStatus">-</div>
+                        <div class="kpi-description">% of deals that entered limbo and took >14 days to exit</div>
+                    </div>
+
+                    <!-- KPI 7: Deals without next step -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <h3>% Pipeline<br>without Next Step</h3>
+                            <div class="kpi-target">Target: < 15%</div>
+                        </div>
+                        <div class="kpi-value" id="dealsWithoutNextStep">-</div>
+                        <div class="kpi-comparison" id="dealsWithoutNextStepComparison">
+                            <span class="comparison-arrow" id="dealsWithoutNextStepArrow">-</span>
+                            <span class="comparison-text" id="dealsWithoutNextStepComparisonText">-</span>
+                        </div>
+                        <div class="kpi-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="dealsWithoutNextStepProgress"></div>
+                            </div>
+                            <div class="progress-text" id="dealsWithoutNextStepText">0%</div>
+                        </div>
+                        <div class="kpi-status" id="dealsWithoutNextStepStatus">-</div>
+                        <div class="kpi-description">% of open deals without a next step date</div>
+                    </div>
+
+                    <!-- KPI 8: Average age of open deals -->
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <h3>Avg. Age<br>of Open Deals</h3>
+                            <div class="kpi-target">Target: < 30 days</div>
+                        </div>
+                        <div class="kpi-value" id="averageDealAge">-</div>
+                        <div class="kpi-comparison" id="averageDealAgeComparison">
+                            <span class="comparison-arrow" id="averageDealAgeArrow">-</span>
+                            <span class="comparison-text" id="averageDealAgeComparisonText">-</span>
+                        </div>
+                        <div class="kpi-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="averageDealAgeProgress"></div>
+                            </div>
+                            <div class="progress-text" id="averageDealAgeText">0%</div>
+                        </div>
+                        <div class="kpi-status" id="averageDealAgeStatus">-</div>
+                        <div class="kpi-description">Average days since deal creation for open deals</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Active Deals Table -->
+        <div class="data-section">
+            <h3>All Active Deals</h3>
+            <div class="table-container">
+                <table id="activeDealsTable">
+                    <thead>
+                        <tr>
+                    <th>Deal ID</th>
+                    <th>Deal Name</th>
+                    <th class="sortable" data-sort="stage">Current Stage <span class="sort-arrow">↕</span></th>
+                    <th>Deal Owner</th>
+                    <th>Create Date</th>
+                    <th>Days in Stage</th>
+                    <th class="sortable" data-sort="risk">Risk Rating <span class="sort-arrow">↕</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="activeDealsTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="script.js?v=20251021vv"></script>
+</body>
+</html>

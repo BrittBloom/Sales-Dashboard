@@ -1413,6 +1413,9 @@ class SalesKPIDashboard {
 
     // KPI Calculation Methods
     calculateClosedWonPerMonth() {
+        console.log('🔢 Calculating Closed Won Per Month...');
+        console.log('🔢 Date range:', this.dateRange.startDate, 'to', this.dateRange.endDate);
+        console.log('🔢 Total deals available:', this.data.length);
         // For closed deals, we need to check ALL deals (not just date-filtered ones)
         // because we want deals closed within the date range, not deals created within the date range
         let dealsToCheck = this.data;
@@ -1781,6 +1784,8 @@ class SalesKPIDashboard {
     }
 
     updateKPICard(kpiId, value, target, progressId, textId, statusId, isPercentage = false, isLowerBetter = false, comparisonId = null) {
+        console.log('🎯 updateKPICard called:', { kpiId, value, target, comparisonId });
+        
         // Debug: Log the value being passed to updateKPICard
         if (kpiId === 'closedWonValue') {
             console.log(`=== UPDATEKPICARD DEBUG ===`);
@@ -1900,7 +1905,12 @@ class SalesKPIDashboard {
         
         // Update comparison if provided
         if (comparisonId) {
+            console.log('🔄 About to call updateComparison with:', { comparisonId, value, isLowerBetter });
+            const comparisonElement = document.getElementById(comparisonId);
+            console.log('🔍 Comparison element found:', comparisonElement);
             this.updateComparison(comparisonId, value, isLowerBetter);
+        } else {
+            console.log('🔄 No comparisonId provided, skipping comparison update');
         }
     }
 
@@ -1929,6 +1939,14 @@ class SalesKPIDashboard {
         }
         
         console.log('Calculating previous year KPIs for range:', prevYearRange.startDate, 'to', prevYearRange.endDate);
+        console.log('Total deals available for previous year calculation:', this.data.length);
+        
+        // Check if we have any deals in the previous year range
+        const dealsInPrevYear = this.data.filter(deal => {
+            const createDate = new Date(deal.createDate);
+            return createDate >= prevYearRange.startDate && createDate <= prevYearRange.endDate;
+        });
+        console.log('Deals found in previous year range:', dealsInPrevYear.length);
         
         // Store current date range
         const currentRange = { ...this.dateRange };
@@ -1936,6 +1954,7 @@ class SalesKPIDashboard {
         // Temporarily set to previous year range
         this.dateRange = prevYearRange;
         
+        console.log('Calculating KPIs for previous year...');
         const prevYearKPIs = {
             closedWon: this.calculateClosedWonPerMonth(),
             meetingClosedRate: this.calculateMeetingClosedRate(),
@@ -1947,7 +1966,7 @@ class SalesKPIDashboard {
             averageDealAge: this.calculateAverageDealAge()
         };
         
-        console.log('Previous year KPIs calculated:', prevYearKPIs);
+        console.log('Previous year KPI results:', prevYearKPIs);
         
         // Restore current date range
         this.dateRange = currentRange;
@@ -1957,11 +1976,34 @@ class SalesKPIDashboard {
     
     // Update comparison display
     updateComparison(comparisonId, currentValue, isLowerBetter = false) {
+        console.log('🔄 updateComparison called with:', { comparisonId, currentValue, isLowerBetter });
+        
         const prevYearKPIs = this.calculatePreviousYearKPIs();
         const kpiName = comparisonId.replace('Comparison', '');
-        const prevValue = prevYearKPIs[kpiName] || 0;
+        
+        console.log('🔍 Comparison Debug:', {
+            comparisonId,
+            kpiName,
+            prevYearKPIs,
+            prevValue: prevYearKPIs[kpiName]
+        });
+        
+        // Remove comparison for pipeline health metrics
+        if (['limboOver14Days', 'dealsWithoutNextStep', 'averageDealAge'].includes(kpiName)) {
+            document.getElementById(comparisonId).innerHTML = '';
+            return;
+        }
+        
+        // Handle case sensitivity issues
+        const prevValue = prevYearKPIs[kpiName] || prevYearKPIs[kpiName.toLowerCase()] || 0;
         
         console.log(`Comparison for ${kpiName}: Current=${currentValue}, Previous=${prevValue}`);
+        console.log(`Previous year KPIs available:`, Object.keys(prevYearKPIs));
+        console.log(`Looking for ${kpiName} in previous year data`);
+        console.log(`Raw prevYearKPIs object:`, prevYearKPIs);
+        console.log(`kpiName: "${kpiName}"`);
+        console.log(`prevYearKPIs[${kpiName}]:`, prevYearKPIs[kpiName]);
+        console.log(`prevValue after || 0:`, prevValue);
         
         if (prevValue === 0) {
             console.log(`No previous year data for ${kpiName}`);
@@ -1994,7 +2036,7 @@ class SalesKPIDashboard {
     }
 
     updateActiveDealsTable() {
-        // Get all deals and apply both date and AE filters
+        // Get all deals and apply filters
         let filteredDeals = this.data;
         
         // Filter by account executive
@@ -2003,15 +2045,13 @@ class SalesKPIDashboard {
             console.log('After AE filter:', filteredDeals.length, 'deals');
         }
         
-        // Filter by create date within the selected month
-        if (this.dateRange.startDate && this.dateRange.endDate) {
-            filteredDeals = filteredDeals.filter(deal => {
-                const createDate = new Date(deal.createDate);
-                return createDate >= this.dateRange.startDate && createDate <= this.dateRange.endDate;
-            });
-            console.log('After date filter:', filteredDeals.length, 'deals');
-        }
+        // Filter out closed deals - only show open deals (NO DATE FILTER)
+        filteredDeals = filteredDeals.filter(deal => 
+            deal.stage !== 'Closed Won' && 
+            deal.stage !== 'Closed Lost'
+        );
         
+        console.log('After removing closed deals:', filteredDeals.length, 'open deals');
         console.log('Final filtered deals for table:', filteredDeals.length);
         
         // Store the data for sorting

@@ -116,6 +116,13 @@ class SalesKPIDashboard {
             const defaultSheetId = '1xzobbUqsFFc9WlP027XoUYOzG1ZUfjrZJaMERfuUbyk';
             const finalSheetId = sheetId || defaultSheetId;
             
+            // Check if we're on GitHub Pages and use sample data
+            if (window.location.hostname.includes('github.io')) {
+                console.log('Detected GitHub Pages, using sample data for demo');
+                this.loadSampleDataWithRealStructure();
+                return;
+            }
+            
             if (useSampleData) {
                 console.log('Using sample data as requested');
                 this.loadSampleDataWithRealStructure();

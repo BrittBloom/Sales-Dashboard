@@ -99,6 +99,13 @@ class SalesKPIDashboard {
         // Google Sheets modal removed
     }
 
+    // Get default API key for GitHub Pages
+    getDefaultApiKey() {
+        // Replace 'YOUR_API_KEY_HERE' with your actual Google Sheets API key
+        // You can find this by running localStorage.getItem('googleSheetsApiKey') in your local dashboard console
+        return 'YOUR_API_KEY_HERE';
+    }
+
     // Load real data from Google Sheets
     async loadRealData() {
         try {
@@ -116,19 +123,19 @@ class SalesKPIDashboard {
             const defaultSheetId = '1xzobbUqsFFc9WlP027XoUYOzG1ZUfjrZJaMERfuUbyk';
             const finalSheetId = sheetId || defaultSheetId;
             
-            // Check if we're on GitHub Pages and use sample data
-            if (window.location.hostname.includes('github.io')) {
-                console.log('Detected GitHub Pages, using sample data for demo');
-                this.loadSampleDataWithRealStructure();
-                return;
-            }
-            
             if (useSampleData) {
                 console.log('Using sample data as requested');
                 this.loadSampleDataWithRealStructure();
-            } else if (apiKey) {
-                console.log('Loading from Google Sheets:', finalSheetId);
-                await this.loadFromGoogleSheets(apiKey, finalSheetId);
+            } else if (apiKey || window.location.hostname.includes('github.io')) {
+                // Use API key if available, or try to load from Google Sheets on GitHub Pages
+                const keyToUse = apiKey || this.getDefaultApiKey();
+                if (keyToUse) {
+                    console.log('Loading from Google Sheets:', finalSheetId);
+                    await this.loadFromGoogleSheets(keyToUse, finalSheetId);
+                } else {
+                    console.log('No API key available, using sample data');
+                    this.loadSampleDataWithRealStructure();
+                }
             } else {
                 console.log('No API key found, using sample data');
                 this.loadSampleDataWithRealStructure();
